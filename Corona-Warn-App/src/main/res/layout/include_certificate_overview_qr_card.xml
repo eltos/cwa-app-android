@@ -20,7 +20,7 @@
     <TextView
         android:id="@+id/status_badge"
         android:layout_width="wrap_content"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:background="@drawable/ic_admission_badge_1"
         android:gravity="center"
         android:textColor="@android:color/white"
@@ -28,8 +28,9 @@
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="@id/status_text"
         app:layout_constraintEnd_toEndOf="@id/image"
-        app:layout_constraintTop_toTopOf="@id/status_text"
-        tools:text="2G+" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0"
+        tools:text="2G+ PCR Test" />
 
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/image"
@@ -94,7 +95,6 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="11dp"
-        android:layout_marginEnd="@dimen/spacing_small"
         android:paddingBottom="11dp"
         android:text="@string/person_details_certificate_covpass_info_title"
         app:layout_constraintEnd_toStartOf="@id/covpass_info_button"
@@ -103,18 +103,11 @@
 
     <ImageButton
         android:id="@+id/covpass_info_button"
+        style="@style/CertificateCardInfoButton"
         android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:layout_marginTop="11dp"
-        android:adjustViewBounds="true"
-        android:background="?android:selectableItemBackground"
-        android:contentDescription="@string/cov_pass_info_title"
-        android:minWidth="48dp"
-        android:scaleType="center"
+        android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/image"
-        app:srcCompat="@drawable/ic_info"
-        app:tint="@color/colorSecondary" />
+        app:layout_constraintTop_toBottomOf="@id/image" />
 
     <com.google.android.material.button.MaterialButtonToggleGroup
         android:id="@+id/certificate_toggle_group"

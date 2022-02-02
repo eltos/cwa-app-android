@@ -3,9 +3,11 @@ package de.rki.coronawarnapp.test.menu.ui
 import androidx.lifecycle.MutableLiveData
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import de.rki.coronawarnapp.covidcertificate.person.core.PersonCertificatesProvider
 import de.rki.coronawarnapp.miscinfo.MiscInfoFragment
 import de.rki.coronawarnapp.test.appconfig.ui.AppConfigTestFragment
 import de.rki.coronawarnapp.test.booster.ui.BoosterTestFragment
+import de.rki.coronawarnapp.test.ccl.CCLTestFragment
 import de.rki.coronawarnapp.test.contactdiary.ui.ContactDiaryTestFragment
 import de.rki.coronawarnapp.test.crash.ui.SettingsCrashReportFragment
 import de.rki.coronawarnapp.test.datadonation.ui.DataDonationTestFragment
@@ -24,11 +26,17 @@ import de.rki.coronawarnapp.test.tasks.ui.TestTaskControllerFragment
 import de.rki.coronawarnapp.util.ui.SingleLiveEvent
 import de.rki.coronawarnapp.util.viewmodel.CWAViewModel
 import de.rki.coronawarnapp.util.viewmodel.SimpleCWAViewModelFactory
+import kotlinx.coroutines.flow.map
 
-class TestMenuFragmentViewModel @AssistedInject constructor() : CWAViewModel() {
+class TestMenuFragmentViewModel @AssistedInject constructor(
+    personCertificatesProvider: PersonCertificatesProvider
+) : CWAViewModel() {
+
+    val personsCount = personCertificatesProvider.personCertificates.map { it.size }.asLiveData2()
 
     val testMenuData by lazy {
         listOf(
+            CCLTestFragment.MENU_ITEM,
             DebugOptionsFragment.MENU_ITEM,
             SettingsCrashReportFragment.MENU_ITEM,
             AppConfigTestFragment.MENU_ITEM,

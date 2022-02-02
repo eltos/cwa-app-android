@@ -5,11 +5,15 @@ import androidx.lifecycle.MutableLiveData
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import de.rki.coronawarnapp.ccl.dccwalletinfo.model.BoosterNotification
+import de.rki.coronawarnapp.ccl.ui.text.format
+import de.rki.coronawarnapp.ccl.ui.text.formatFaqAnchor
+import de.rki.coronawarnapp.ccl.ui.text.urlResource
 import de.rki.coronawarnapp.covidcertificate.common.certificate.CwaCovidCertificate
 import de.rki.coronawarnapp.covidcertificate.common.repository.CertificateContainerId
 import de.rki.coronawarnapp.covidcertificate.person.core.PersonCertificates
-import de.rki.coronawarnapp.covidcertificate.person.core.PersonCertificates.AdmissionState.Other
 import de.rki.coronawarnapp.covidcertificate.person.core.PersonCertificatesProvider
+import de.rki.coronawarnapp.covidcertificate.person.ui.details.items.BoosterCard
 import de.rki.coronawarnapp.covidcertificate.person.ui.details.items.CertificateItem
 import de.rki.coronawarnapp.covidcertificate.person.ui.details.items.ConfirmedStatusCard
 import de.rki.coronawarnapp.covidcertificate.person.ui.details.items.CwaUserCard
@@ -36,7 +40,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.mapNotNull
 import timber.log.Timber
 
@@ -71,6 +75,7 @@ class PersonDetailsViewModel @AssistedInject constructor(
         createUiState(personSpecificCertificates, isLoading)
     }.asLiveData2()
 
+    @Suppress("NestedBlockDepth")
     private suspend fun createUiState(personCertificates: PersonCertificates, isLoading: Boolean): UiState {
         val priorityCertificate = personCertificates.highestPriorityCertificate
         if (priorityCertificate == null) {
@@ -93,33 +98,51 @@ class PersonDetailsViewModel @AssistedInject constructor(
                 )
             )
 
-            val admissionState = personCertificates.admissionState
-            if (admissionState != null && admissionState !is Other) {
-                add(
-                    ConfirmedStatusCard.Item(
-                        admissionState = admissionState,
-                        colorShade = colorShade
-                    )
-                )
-            }
-
-            // Find any vaccination certificate to determine the vaccination information
-            personCertificates.certificates.find { it is VaccinationCertificate }?.let { certificate ->
-                val vaccinatedPerson = vaccinatedPerson(certificate)
-                if (vaccinatedPerson != null) {
-                    val daysUntilImmunity = vaccinatedPerson.getDaysUntilImmunity()
-                    val vaccinationStatus = vaccinatedPerson.getVaccinationStatus()
-                    val daysSinceLastVaccination = vaccinatedPerson.getDaysSinceLastVaccination()
-                    val boosterRule = vaccinatedPerson.boosterRule
+            personCertificates.dccWalletInfo?.boosterNotification?.let { boosterNotification ->
+                if (boosterNotification.visible) {
                     add(
-                        VaccinationInfoCard.Item(
-                            vaccinationStatus = vaccinationStatus,
-                            daysUntilImmunity = daysUntilImmunity,
-                            boosterRule = boosterRule,
-                            daysSinceLastVaccination = daysSinceLastVaccination,
-                            hasBoosterNotification = vaccinatedPerson.hasBoosterNotification
+                        BoosterCard.Item(
+                            boosterNotification = boosterNotification,
+                            isNew = checkBoosterNotificationBadge(personCertificates, boosterNotification),
+                            onClick = { events.postValue(OpenBoosterInfoDetails(personIdentifierCode)) }
                         )
                     )
+                }
+            }
+
+            personCertificates.dccWalletInfo?.admissionState?.let { admissionState ->
+                if (admissionState.visible) {
+                    try {
+                        add(
+                            ConfirmedStatusCard.Item(
+                                titleText = admissionState.titleText.format().orEmpty(),
+                                subtitleText = admissionState.subtitleText.format().orEmpty(),
+                                badgeText = admissionState.badgeText.format().orEmpty(),
+                                longText = admissionState.longText.format().orEmpty(),
+                                faqAnchor = formatFaqAnchor(admissionState.faqAnchor),
+                                colorShade = colorShade
+                            )
+                        )
+                    } catch (e: Exception) {
+                        Timber.e(e, "creating ConfirmedStatusCard.Item failed")
+                    }
+                }
+            }
+
+            personCertificates.dccWalletInfo?.vaccinationState?.let { vaccinationState ->
+                if (vaccinationState.visible) {
+                    try {
+                        add(
+                            VaccinationInfoCard.Item(
+                                titleText = vaccinationState.titleText.format().orEmpty(),
+                                subtitleText = vaccinationState.subtitleText.format().orEmpty(),
+                                longText = vaccinationState.longText.format().orEmpty(),
+                                faqAnchor = urlResource(vaccinationState.faqAnchor).value,
+                            )
+                        )
+                    } catch (e: Exception) {
+                        Timber.e(e, "creating VaccinationInfoCard.Item failed")
+                    }
                 }
             }
 
@@ -129,6 +152,19 @@ class PersonDetailsViewModel @AssistedInject constructor(
         }
 
         return UiState(name = priorityCertificate.fullName, certificateItems = certificateItems)
+    }
+
+    private suspend fun checkBoosterNotificationBadge(
+        personCertificates: PersonCertificates,
+        boosterNotification: BoosterNotification
+    ): Boolean {
+        personCertificates.certificates.find { it is VaccinationCertificate }?.let { certificate ->
+            val vaccinatedPerson = vaccinatedPerson(certificate)
+            if (vaccinatedPerson?.data?.lastSeenBoosterRuleIdentifier != boosterNotification.identifier) {
+                return true
+            }
+        }
+        return false
     }
 
     private fun onValidateCertificate(containerId: CertificateContainerId) =
@@ -208,12 +244,7 @@ class PersonDetailsViewModel @AssistedInject constructor(
     }
 
     private suspend fun vaccinatedPerson(certificate: CwaCovidCertificate): VaccinatedPerson? =
-        vaccinationRepository.vaccinationInfos.first().find { it.identifier == certificate.personIdentifier }
-
-    fun refreshBoosterRuleState() = launch(scope = appScope) {
-        Timber.v("refreshBoosterRuleState personIdentifierCode=$personIdentifierCode")
-        vaccinationRepository.acknowledgeBoosterRule(personIdentifierCode = personIdentifierCode)
-    }
+        vaccinationRepository.vaccinationInfos.firstOrNull()?.find { it.identifier == certificate.personIdentifier }
 
     data class UiState(
         val name: String,

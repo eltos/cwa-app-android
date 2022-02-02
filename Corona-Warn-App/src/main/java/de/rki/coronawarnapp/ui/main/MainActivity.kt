@@ -13,7 +13,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.navigation.NavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.transition.MaterialElevationScale
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
@@ -32,7 +31,6 @@ import de.rki.coronawarnapp.ui.setupWithNavController2
 import de.rki.coronawarnapp.util.AppShortcuts
 import de.rki.coronawarnapp.util.CWADebug
 import de.rki.coronawarnapp.util.DialogHelper
-import de.rki.coronawarnapp.util.ExternalActionHelper.openAppDetailsSettings
 import de.rki.coronawarnapp.util.device.PowerManagement
 import de.rki.coronawarnapp.util.di.AppInjector
 import de.rki.coronawarnapp.util.shortcuts.AppShortcutsHelper.Companion.getShortcutExtra
@@ -99,12 +97,9 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector {
             setupWithNavController2(
                 navController,
                 onItemSelected = { viewModel.onBottomNavSelected() },
-                onDestinationChanged = { isBarVisible ->
-                    if (isBarVisible) {
-                        resetCurrentFragmentTransition()
-                    }
-
-                    binding.fabTooltip.root.isVisible = isBarVisible && viewModel.isToolTipVisible.value == true
+                onDestinationChanged = { barVisible ->
+                    if (barVisible) resetCurrentFragmentTransition()
+                    binding.checkToolTipVisibility(viewModel.isToolTipVisible.value == true)
                 }
             )
 
@@ -123,8 +118,8 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector {
             }
         }
 
-        viewModel.isToolTipVisible.observe(this) { visible ->
-            binding.fabTooltip.root.isVisible = visible
+        viewModel.isToolTipVisible.observe(this) { showTooltip ->
+            binding.checkToolTipVisibility(showTooltip)
         }
 
         viewModel.showBackgroundJobDisabledNotification.observe(this) {
@@ -154,8 +149,8 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector {
             binding.mainBottomNavigation.updateCountBadge(R.id.covid_certificates_graph, count)
         }
 
-        viewModel.testsBadgeCount.observe(this) { count ->
-            Timber.tag(TAG).d("testsBadgeCount=$count")
+        viewModel.mainBadgeCount.observe(this) { count ->
+            Timber.tag(TAG).d("mainBadgeCount=$count")
             binding.mainBottomNavigation.updateCountBadge(R.id.mainFragment, count)
         }
 
@@ -171,8 +166,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector {
                     NavGraphDirections.actionSubmissionConsentFragment(event.request)
                 )
                 is MainActivityEvent.Error -> event.error.toErrorDialogBuilder(this).show()
-                is MainActivityEvent.OpenScanner ->
-                    if (event.requiresPermission) openPermissionDialog() else navigateToScanner()
+                is MainActivityEvent.OpenScanner -> navigateToScanner()
             }
         }
 
@@ -181,13 +175,10 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector {
         }
     }
 
-    private fun openPermissionDialog() {
-        MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.camera_permission_dialog_title)
-            .setMessage(R.string.camera_permission_dialog_message)
-            .setNegativeButton(R.string.camera_permission_dialog_settings) { _, _ -> openAppDetailsSettings() }
-            .setPositiveButton(android.R.string.ok) { _, _ -> }
-            .show()
+    private fun ActivityMainBinding.checkToolTipVisibility(
+        showTooltip: Boolean
+    ) {
+        fabTooltip.root.isVisible = bottomAppBar.isVisible && showTooltip
     }
 
     override fun onNewIntent(intent: Intent?) {
@@ -199,6 +190,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector {
     private fun processExtraParameters() {
         when (intent.getShortcutExtra()) {
             AppShortcuts.CONTACT_DIARY -> goToContactJournal()
+            else -> Unit
         }
 
         navigateByIntentUri(intent)
@@ -334,6 +326,7 @@ class MainActivity : AppCompatActivity(), HasAndroidInjector {
         }
     }
 
+    @Suppress("DEPRECATION")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         supportFragmentManager.currentNavigationFragment?.onActivityResult(

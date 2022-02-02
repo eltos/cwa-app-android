@@ -10,8 +10,8 @@ import coil.loadAny
 import de.rki.coronawarnapp.R
 import de.rki.coronawarnapp.contactdiary.ui.day.tabs.common.setOnCheckedChangeListener
 import de.rki.coronawarnapp.covidcertificate.common.certificate.CwaCovidCertificate
-import de.rki.coronawarnapp.covidcertificate.person.ui.overview.PersonColorShade
 import de.rki.coronawarnapp.covidcertificate.common.certificate.getValidQrCode
+import de.rki.coronawarnapp.covidcertificate.person.ui.overview.PersonColorShade
 import de.rki.coronawarnapp.covidcertificate.recovery.core.RecoveryCertificate
 import de.rki.coronawarnapp.covidcertificate.test.core.TestCertificate
 import de.rki.coronawarnapp.covidcertificate.vaccination.core.VaccinationCertificate
@@ -135,6 +135,7 @@ fun IncludeCertificateQrcodeCardBinding.bindValidityViews(
             qrSubtitle.isVisible = isPersonDetails
             startValidationCheckButton.isVisible = isPersonDetails
         }
+        CwaCovidCertificate.State.Recycled -> Unit
     }
 }
 
@@ -142,8 +143,10 @@ fun IncludeCertificateQrcodeCardBinding.bindValidityViews(
 fun PersonOverviewItemBinding.setUIState(
     primaryCertificate: CwaCovidCertificate,
     secondaryCertificate: CwaCovidCertificate? = null,
+    primaryCertificateButtonText: String = "",
+    secondaryCertificateButtonText: String?,
     colorShade: PersonColorShade,
-    statusBadgeText: Int = 0,
+    statusBadgeText: String = "",
     badgeCount: Int = 0,
     onCovPassInfoAction: () -> Unit
 ) {
@@ -162,10 +165,10 @@ fun PersonOverviewItemBinding.setUIState(
     certificateBadgeText.isVisible = badgeCount != 0
     qrCodeCard.apply {
         loadQrImage(primaryCertificate)
-        statusText.isVisible = statusBadgeText != 0
-        statusBadge.isVisible = statusBadgeText != 0
-        if (statusBadgeText != 0) {
-            statusBadge.text = context.getString(statusBadgeText)
+        statusText.isVisible = statusBadgeText.isNotEmpty()
+        statusBadge.isVisible = statusBadgeText.isNotEmpty()
+        if (statusBadgeText.isNotEmpty()) {
+            statusBadge.text = statusBadgeText
         }
         covpassInfoTitle.isVisible = valid
         covpassInfoButton.isVisible = valid
@@ -173,6 +176,10 @@ fun PersonOverviewItemBinding.setUIState(
         invalidOverlay.isGone = valid
         image.isEnabled = valid
         certificateToggleGroup.isVisible = secondaryCertificate != null
+        if (primaryCertificateButtonText.isNotEmpty()) primaryCertificateButton.text = primaryCertificateButtonText
+        if (secondaryCertificateButtonText != null && secondaryCertificateButtonText.isNotEmpty()) {
+            secondaryCertificateButton.text = secondaryCertificateButtonText
+        }
         primaryCertificateButton.typeface = Typeface.DEFAULT_BOLD
         secondaryCertificateButton.typeface = Typeface.DEFAULT
         certificateToggleGroup.setOnCheckedChangeListener { checkedId ->
@@ -277,6 +284,7 @@ fun TextView.displayExpirationState(certificate: CwaCovidCertificate) {
             isVisible = true
             text = context.getText(R.string.error_dcc_in_blocklist_title)
         }
+        CwaCovidCertificate.State.Recycled -> Unit
     }
 }
 

@@ -55,6 +55,7 @@ data class VaccinatedPerson(
     val hasBoosterNotification: Boolean
         get() = data.boosterRule?.identifier != data.lastSeenBoosterRuleIdentifier
 
+    @Throws(NoSuchElementException::class)
     fun getDaysSinceLastVaccination(): Int {
         val today = Instant.now().toLocalDateUserTz()
         return Days.daysBetween(getNewestDoseVaccinatedOn(), today).days
@@ -67,8 +68,8 @@ data class VaccinatedPerson(
         it.containerId == containerId
     }
 
-    val fullName: String
-        get() = allVaccinationCertificates.first().fullName
+    val fullName: String?
+        get() = allVaccinationCertificates.firstOrNull()?.fullName
 
     fun getVaccinationStatus(nowUTC: Instant = Instant.now()): Status {
         if (boosterRule != null) return Status.BOOSTER_ELIGIBLE
@@ -89,14 +90,21 @@ data class VaccinatedPerson(
         else IMMUNITY_WAITING_DAYS - Days.daysBetween(newestFullDose.vaccinatedOn, today).days
     }
 
+    @Throws(NoSuchElementException::class)
     private fun getNewestDoseVaccinatedOn(): LocalDate =
         vaccinationCertificates.maxOf { it.vaccinatedOn }
 
     private fun isSeriesCompletingOverTwoWeeks(today: LocalDate): Boolean {
-        val certificate = vaccinationCertificates
-            .filter { it.isSeriesCompletingShot }
-            .firstOrNull { Days.daysBetween(it.rawCertificate.vaccination.vaccinatedOn, today).days > 14 }
-        return certificate != null
+        return when {
+            vaccinationCertificates.isEmpty() -> false
+            vaccinationCertificates.any { it.doseNumber > it.totalSeriesOfDoses } -> true
+            else -> vaccinationCertificates.any {
+                it.isSeriesCompletingShot && Days.daysBetween(
+                    it.rawCertificate.vaccination.vaccinatedOn,
+                    today
+                ).days > 14
+            }
+        }
     }
 
     private fun getNewestFullDose(): VaccinationCertificate? = vaccinationCertificates

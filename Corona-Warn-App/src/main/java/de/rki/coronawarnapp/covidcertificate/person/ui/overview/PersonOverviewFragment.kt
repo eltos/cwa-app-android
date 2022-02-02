@@ -2,6 +2,7 @@ package de.rki.coronawarnapp.covidcertificate.person.ui.overview
 
 import android.os.Bundle
 import android.view.View
+import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.FragmentNavigatorExtras
@@ -13,7 +14,6 @@ import com.google.android.material.transition.MaterialSharedAxis
 import de.rki.coronawarnapp.R
 import de.rki.coronawarnapp.bugreporting.ui.toErrorDialogBuilder
 import de.rki.coronawarnapp.covidcertificate.person.ui.details.PersonDetailsFragmentArgs
-import de.rki.coronawarnapp.covidcertificate.person.ui.overview.items.PersonCertificatesItem
 import de.rki.coronawarnapp.databinding.PersonOverviewFragmentBinding
 import de.rki.coronawarnapp.util.ExternalActionHelper.openUrl
 import de.rki.coronawarnapp.util.di.AutoInject
@@ -41,7 +41,7 @@ class PersonOverviewFragment : Fragment(R.layout.person_overview_fragment), Auto
             bindToolbar()
             bindRecycler()
         }
-        viewModel.personCertificates.observe(viewLifecycleOwner) { binding.bindViews(it) }
+        viewModel.uiState.observe(viewLifecycleOwner) { binding.bindViews(it) }
         viewModel.events.observe(viewLifecycleOwner) { onNavEvent(it) }
     }
 
@@ -79,9 +79,10 @@ class PersonOverviewFragment : Fragment(R.layout.person_overview_fragment), Auto
             is ShowRefreshErrorDialog -> event.error.toErrorDialogBuilder(requireContext()).apply {
                 setTitle(R.string.test_certificate_refresh_dialog_title)
                 setCancelable(false)
-                if (event.isLabError) setNeutralButton(R.string.test_certificate_error_invalid_labid_faq) { _, _ ->
-                    openUrl(getString(R.string.test_certificate_error_invalid_labid_faq_link))
-                }
+                if (event.showTestCertificateFaq)
+                    setNeutralButton(R.string.test_certificate_error_invalid_labid_faq) { _, _ ->
+                        openUrl(getString(R.string.test_certificate_error_invalid_labid_faq_link))
+                    }
             }.show()
 
             OpenCovPassInfo -> doNavigate(
@@ -117,10 +118,21 @@ class PersonOverviewFragment : Fragment(R.layout.person_overview_fragment), Auto
         }
     }
 
-    private fun PersonOverviewFragmentBinding.bindViews(items: List<PersonCertificatesItem>) {
-        Timber.tag(TAG).d("bindViews(items=%s)", items)
-        emptyLayout.isVisible = items.isEmpty()
-        personOverviewAdapter.update(items)
+    private fun PersonOverviewFragmentBinding.bindViews(uiState: PersonOverviewViewModel.UiState) {
+        Timber.tag(TAG).d("bindViews(uiState=%s)", uiState)
+        when (uiState) {
+            is PersonOverviewViewModel.UiState.Done -> {
+                emptyLayout.isVisible = uiState.personCertificates.isEmpty()
+                recyclerView.isGone = uiState.personCertificates.isEmpty()
+                personOverviewAdapter.update(uiState.personCertificates)
+                loadingLayoutGroup.isVisible = false
+            }
+            PersonOverviewViewModel.UiState.Loading -> {
+                recyclerView.isGone = true
+                emptyLayout.isGone = true
+                loadingLayoutGroup.isVisible = true
+            }
+        }
 
         Timber.tag(TAG).d("recyclerViewVisibility=%s", recyclerView.visibility)
         Timber.tag(TAG).d("recyclerViewItemsCount=%s", recyclerView.layoutManager?.itemCount)

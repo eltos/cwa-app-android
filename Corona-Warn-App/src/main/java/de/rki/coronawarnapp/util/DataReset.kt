@@ -3,10 +3,12 @@ package de.rki.coronawarnapp.util
 import android.annotation.SuppressLint
 import de.rki.coronawarnapp.appconfig.AppConfigProvider
 import de.rki.coronawarnapp.bugreporting.BugReportingSettings
+import de.rki.coronawarnapp.ccl.configuration.storage.CCLConfigurationRepository
+import de.rki.coronawarnapp.ccl.dccwalletinfo.storage.DccWalletInfoRepository
 import de.rki.coronawarnapp.contactdiary.storage.ContactDiaryPreferences
 import de.rki.coronawarnapp.contactdiary.storage.repo.ContactDiaryRepository
 import de.rki.coronawarnapp.coronatest.CoronaTestRepository
-import de.rki.coronawarnapp.coronatest.antigen.profile.RATProfileSettings
+import de.rki.coronawarnapp.coronatest.antigen.profile.RATProfileSettingsDataStore
 import de.rki.coronawarnapp.covidcertificate.booster.BoosterRulesRepository
 import de.rki.coronawarnapp.covidcertificate.person.core.PersonCertificatesSettings
 import de.rki.coronawarnapp.covidcertificate.recovery.core.RecoveryCertificateRepository
@@ -74,7 +76,7 @@ class DataReset @Inject constructor(
     private val traceLocationSettings: TraceLocationSettings,
     private val traceWarningRepository: TraceWarningRepository,
     private val coronaTestRepository: CoronaTestRepository,
-    private val ratProfileSettings: RATProfileSettings,
+    private val ratProfileSettings: RATProfileSettingsDataStore,
     private val valueSetsRepository: ValueSetsRepository,
     private val covidCertificateSettings: CovidCertificateSettings,
     private val vaccinationRepository: VaccinationRepository,
@@ -87,13 +89,14 @@ class DataReset @Inject constructor(
     private val exposureWindowsSettings: AnalyticsExposureWindowsSettings,
     private val dccTicketingAllowListRepository: DccTicketingAllowListRepository,
     private val dccTicketingQrCodeSettings: DccTicketingQrCodeSettings,
+    private val cclConfigurationRepository: CCLConfigurationRepository,
+    private val dccWalletInfoRepository: DccWalletInfoRepository,
 ) {
 
     private val mutex = Mutex()
 
     /**
      * Deletes all data known to the Application
-     *
      */
     @SuppressLint("ApplySharedPref") // We need a commit here to ensure consistency
     suspend fun clearAllLocalData() = mutex.withLock {
@@ -150,6 +153,10 @@ class DataReset @Inject constructor(
         dccTicketingAllowListRepository.clear()
 
         dccTicketingQrCodeSettings.clear()
+
+        cclConfigurationRepository.clear()
+
+        dccWalletInfoRepository.clear()
 
         Timber.w("CWA LOCAL DATA DELETION COMPLETED.")
     }

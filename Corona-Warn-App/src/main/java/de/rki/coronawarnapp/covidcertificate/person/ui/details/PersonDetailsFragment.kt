@@ -86,17 +86,12 @@ class PersonDetailsFragment : Fragment(R.layout.person_details_fragment), AutoIn
         }
     }
 
-    override fun onStop() {
-        super.onStop()
-        viewModel.refreshBoosterRuleState()
-    }
-
     private fun onNavEvent(event: PersonDetailsEvents) {
         when (event) {
             is OpenRecoveryCertificateDetails -> doNavigate(
                 PersonDetailsFragmentDirections
                     .actionPersonDetailsFragmentToRecoveryCertificateDetailsFragment(
-                        certIdentifier = event.containerId.identifier,
+                        certIdentifier = event.containerId.qrCodeHash,
                         fromScanner = false,
                         colorShade = event.colorShade
                     )
@@ -104,7 +99,7 @@ class PersonDetailsFragment : Fragment(R.layout.person_details_fragment), AutoIn
             is OpenTestCertificateDetails -> doNavigate(
                 PersonDetailsFragmentDirections
                     .actionPersonDetailsFragmentToTestCertificateDetailsFragment(
-                        certIdentifier = event.containerId.identifier,
+                        certIdentifier = event.containerId.qrCodeHash,
                         fromScanner = false,
                         colorShade = event.colorShade
                     )
@@ -112,7 +107,7 @@ class PersonDetailsFragment : Fragment(R.layout.person_details_fragment), AutoIn
             is OpenVaccinationCertificateDetails -> doNavigate(
                 PersonDetailsFragmentDirections
                     .actionPersonDetailsFragmentToVaccinationDetailsFragment(
-                        certIdentifier = event.containerId.identifier,
+                        certIdentifier = event.containerId.qrCodeHash,
                         fromScanner = false,
                         colorShade = event.colorShade
                     )
@@ -128,6 +123,10 @@ class PersonDetailsFragment : Fragment(R.layout.person_details_fragment), AutoIn
                     error.toErrorDialogBuilder(requireContext()).show()
                 }
             }
+            is OpenBoosterInfoDetails -> doNavigate(
+                PersonDetailsFragmentDirections
+                    .actionPersonDetailsFragmentToBoosterInfoDetailsFragment(event.personCode)
+            )
             Back -> popBackStack()
             OpenCovPassInfo ->
                 doNavigate(PersonDetailsFragmentDirections.actionPersonDetailsFragmentToCovPassInfoFragment())

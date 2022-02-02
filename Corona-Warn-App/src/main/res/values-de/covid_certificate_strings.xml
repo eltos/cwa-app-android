@@ -41,6 +41,8 @@
     <string name="certificate_qr_invalid_signature">"Zertifikat (Signatur) ungültig"</string>
     <!-- XTXT: Certificate badge text -->
     <string name="certificate_badge_text">"Es gibt Neuigkeiten zu Ihren Zertifikaten"</string>
+    <!-- XTXT: Certificate loading text -->
+    <string name="certificate_loading_text">"Ihre Zertifikate werden geladen..."</string>
 
     <!-- XTXT: Vaccination Consent subtitle-->
     <string name="vaccination_consent_headline">"Zertifikate hinzufügen"</string>
@@ -371,7 +373,7 @@
     <!-- XHED: Cov Pass Info Fragment title -->
     <string name="cov_pass_info_title">"Zertifikatsprüfung durch Dritte"</string>
     <!-- XHED: Cov Pass Info Fragment title -->
-    <string name="cov_pass_info_subtitle">"Dritte können über die CovPassCheck-App verlässlich überprüfen, ob es sich um ein valides Impf-, Genesenen- oder Testzertifikat handelt."</string>
+    <string name="cov_pass_info_subtitle">"Dritte können mit der CovPassCheck-App verlässlich überprüfen, ob es sich um ein valides Impf-, Genesenen- oder Testzertifikat handelt."</string>
     <!-- XTXT: Cov Pass Info Fragment link label -->
     <string name="cov_pass_info_faq_link_label">"FAQ zur Zertifikatsprüfung durch Dritte"</string>
 
@@ -404,13 +406,15 @@
     <string name="confirmed_status_3g_plus_badge">"3G+"</string>
 
     <!-- XTXT: Confirmed status card 2G body -->
-    <string name="confirmed_status_2g_body">"Ihre Zertifikate erfüllen die 2G-Regel. Wenn Sie Ihren aktuellen Status vorweisen müssen, schließen sie diese Ansicht und zeigen Sie den QR-Code auf der Zertifikatsübersicht."</string>
-    <!-- XTXT: Confirmed status card 2G+ body -->
-    <string name="confirmed_status_2g_plus_body">"Ihre Zertifikate erfüllen die 2G-Plus-Regel. Wenn Sie Ihren aktuellen Status vorweisen müssen, schließen sie diese Ansicht und zeigen Sie den QR-Code auf der Zertifikatsübersicht."</string>
+    <string name="confirmed_status_2g_body">"Ihre Zertifikate erfüllen die 2G-Regel. Wenn Sie Ihren aktuellen Status vorweisen müssen, schließen Sie diese Ansicht und zeigen Sie den QR-Code auf der Zertifikatsübersicht."</string>
+    <!-- XTXT: Confirmed status card 2G+ RAT body -->
+    <string name="confirmed_status_2g_plus_rat_body">"Ihre Zertifikate erfüllen die 2G-Plus-Regel, es sei denn, es wird ein PCR-Test benötigt. Wenn Sie Ihren aktuellen Status vorweisen müssen, schließen Sie diese Ansicht und zeigen Sie den QR-Code auf der Zertifikatsübersicht."</string>
+    <!-- XTXT: Confirmed status card 2G+ PCR body -->
+    <string name="confirmed_status_2g_plus_pcr_body">"Ihre Zertifikate erfüllen die 2G-Plus-Regel. Wenn Sie Ihren aktuellen Status vorweisen müssen, schließen Sie diese Ansicht und zeigen Sie den QR-Code auf der Zertifikatsübersicht."</string>
     <!-- XTXT: Confirmed status card 3G body -->
-    <string name="confirmed_status_3g_body">"Ihre Zertifikate erfüllen die 3G-Regel. Wenn Sie Ihren aktuellen Status vorweisen müssen, schließen sie diese Ansicht und zeigen Sie den QR-Code auf der Zertifikatsübersicht."</string>
+    <string name="confirmed_status_3g_body">"Ihre Zertifikate erfüllen die 3G-Regel. Wenn Sie Ihren aktuellen Status vorweisen müssen, schließen Sie diese Ansicht und zeigen Sie den QR-Code auf der Zertifikatsübersicht."</string>
     <!-- XTXT: Confirmed status card 3G+ body -->
-    <string name="confirmed_status_3g_plus_body">"Ihre Zertifikate erfüllen die 3G-Plus-Regel. Wenn Sie Ihren aktuellen Status vorweisen müssen, schließen sie diese Ansicht und zeigen Sie den QR-Code auf der Zertifikatsübersicht."</string>
+    <string name="confirmed_status_3g_plus_body">"Ihre Zertifikate erfüllen die 3G-Plus-Regel. Wenn Sie Ihren aktuellen Status vorweisen müssen, schließen Sie diese Ansicht und zeigen Sie den QR-Code auf der Zertifikatsübersicht."</string>
 
     <!-- XTXT: Confirmed status card FAQ link -->
     <string name="confirmed_status_faq_text">"Mehr Informationen finden Sie in den FAQ."</string>

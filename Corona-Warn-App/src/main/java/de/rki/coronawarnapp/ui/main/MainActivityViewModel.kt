@@ -5,25 +5,27 @@ import androidx.lifecycle.MutableLiveData
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import de.rki.coronawarnapp.contactdiary.ui.ContactDiarySettings
-import de.rki.coronawarnapp.coronatest.qrcode.RapidAntigenQrCodeExtractor
 import de.rki.coronawarnapp.coronatest.CoronaTestRepository
+import de.rki.coronawarnapp.coronatest.qrcode.RapidAntigenQrCodeExtractor
 import de.rki.coronawarnapp.covidcertificate.person.core.PersonCertificatesProvider
 import de.rki.coronawarnapp.covidcertificate.vaccination.core.CovidCertificateSettings
+import de.rki.coronawarnapp.covidcertificate.valueset.ValueSetsRepository
 import de.rki.coronawarnapp.environment.EnvironmentSetup
 import de.rki.coronawarnapp.playbook.BackgroundNoise
 import de.rki.coronawarnapp.presencetracing.TraceLocationSettings
 import de.rki.coronawarnapp.presencetracing.checkins.CheckInRepository
 import de.rki.coronawarnapp.storage.OnboardingSettings
+import de.rki.coronawarnapp.storage.TracingSettings
 import de.rki.coronawarnapp.submission.SubmissionRepository
 import de.rki.coronawarnapp.ui.main.home.MainActivityEvent
 import de.rki.coronawarnapp.ui.presencetracing.attendee.checkins.CheckInsFragment
-import de.rki.coronawarnapp.ui.presencetracing.attendee.checkins.permission.CameraPermissionProvider
 import de.rki.coronawarnapp.util.CWADebug
 import de.rki.coronawarnapp.util.coroutine.DispatcherProvider
 import de.rki.coronawarnapp.util.device.BackgroundModeStatus
 import de.rki.coronawarnapp.util.ui.SingleLiveEvent
 import de.rki.coronawarnapp.util.viewmodel.CWAViewModel
 import de.rki.coronawarnapp.util.viewmodel.SimpleCWAViewModelFactory
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
@@ -40,10 +42,11 @@ class MainActivityViewModel @AssistedInject constructor(
     private val covidCertificateSettings: CovidCertificateSettings,
     private val raExtractor: RapidAntigenQrCodeExtractor,
     private val submissionRepository: SubmissionRepository,
-    private val cameraPermissionProvider: CameraPermissionProvider,
     coronaTestRepository: CoronaTestRepository,
     checkInRepository: CheckInRepository,
     personCertificatesProvider: PersonCertificatesProvider,
+    valueSetRepository: ValueSetsRepository,
+    tracingSettings: TracingSettings,
 ) : CWAViewModel(
     dispatcherProvider = dispatcherProvider
 ) {
@@ -69,10 +72,14 @@ class MainActivityViewModel @AssistedInject constructor(
 
     val personsBadgeCount: LiveData<Int> = personCertificatesProvider.personsBadgeCount.asLiveData2()
 
-    val testsBadgeCount: LiveData<Int> = coronaTestRepository.coronaTests
-        .map { coronaTests ->
-            coronaTests.filter { !it.didShowBadge }.count()
-        }.asLiveData2()
+    val mainBadgeCount: LiveData<Int> = combine(
+        coronaTestRepository.coronaTests,
+        tracingSettings.showRiskLevelBadge.flow
+    ) { coronaTests, showBadge ->
+        coronaTests.filter { !it.didShowBadge }
+            .count()
+            .plus(if (showBadge) 1 else 0)
+    }.asLiveData2()
 
     init {
         if (CWADebug.isDeviceForTestersBuild) {
@@ -83,6 +90,8 @@ class MainActivityViewModel @AssistedInject constructor(
                 }
             }
         }
+
+        valueSetRepository.triggerUpdateValueSet()
 
         launch {
             if (!onboardingSettings.isBackgroundCheckDone) {
@@ -142,7 +151,7 @@ class MainActivityViewModel @AssistedInject constructor(
     }
 
     fun openScanner() = launch {
-        event.postValue(MainActivityEvent.OpenScanner(cameraPermissionProvider.deniedPermanently.first()))
+        event.postValue(MainActivityEvent.OpenScanner)
     }
 
     fun dismissTooltip() {

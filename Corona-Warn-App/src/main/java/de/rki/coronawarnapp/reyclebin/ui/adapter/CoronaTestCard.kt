@@ -8,6 +8,7 @@ import de.rki.coronawarnapp.coronatest.type.CoronaTest
 import de.rki.coronawarnapp.coronatest.type.pcr.PCRCoronaTest
 import de.rki.coronawarnapp.coronatest.type.rapidantigen.RACoronaTest
 import de.rki.coronawarnapp.databinding.RecyclerBinCertificateItemBinding
+import de.rki.coronawarnapp.reyclebin.ui.common.addDeletionInfoIfExists
 import de.rki.coronawarnapp.ui.presencetracing.attendee.checkins.items.BaseCheckInVH.Companion.setupMenu
 import de.rki.coronawarnapp.util.TimeAndDateExtensions.toUIFormat
 import de.rki.coronawarnapp.util.list.Swipeable
@@ -46,15 +47,17 @@ class CoronaTestCard(parent: ViewGroup) :
         )
         certificateInfoLine2.text = when (test) {
             is PCRCoronaTest -> context.getString(
-                R.string.test_result_card_registered_at_text,
+                R.string.reycle_bin_pcr_test_date,
                 test.registeredAt.toDate().toUIFormat(context)
             )
             is RACoronaTest -> context.getString(
-                R.string.ag_homescreen_card_rapid_body_result_date,
+                R.string.reycle_bin_rat_test_date,
                 test.testTakenAt.toDate().toUIFormat(context)
             )
             else -> throw IllegalStateException("Unknown test type ${test.type}")
         }
+
+        addDeletionInfoIfExists(item = test)
 
         root.setOnClickListener { item.onRestore(item.test) }
 
