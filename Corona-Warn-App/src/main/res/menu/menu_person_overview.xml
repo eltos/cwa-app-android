@@ -4,6 +4,13 @@
     tools:context=".MainActivity">
 
     <item
+        android:id="@+id/menu_max_brightness"
+        android:icon="@drawable/ic_menu_brightness_high"
+        android:title="@string/menu_max_brightness"
+        android:checkable="true"
+        app:showAsAction="ifRoom" />
+
+    <item
         android:id="@+id/menu_information"
         android:title="@string/menu_certification_information"
         app:showAsAction="never" />

@@ -2,6 +2,7 @@ package de.rki.coronawarnapp.covidcertificate.person.ui.overview
 
 import android.os.Bundle
 import android.view.View
+import android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -113,6 +114,10 @@ class PersonOverviewFragment : Fragment(R.layout.person_overview_fragment), Auto
                     )
                     true
                 }
+                R.id.menu_max_brightness -> {
+                    highBrightness(!it.isChecked)
+                    true
+                }
 
                 else -> onOptionsItemSelected(it)
             }
@@ -133,6 +138,21 @@ class PersonOverviewFragment : Fragment(R.layout.person_overview_fragment), Auto
         adapter = personOverviewAdapter
         addItemDecoration(TopBottomPaddingDecorator(topPadding = R.dimen.spacing_tiny))
         itemAnimator = DefaultItemAnimator()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        highBrightness(false)
+    }
+
+    private fun highBrightness(on: Boolean) = with(requireActivity().window) {
+        if (on) addFlags(FLAG_KEEP_SCREEN_ON) else clearFlags(FLAG_KEEP_SCREEN_ON)
+        attributes = attributes.apply { screenBrightness = if (on) 1f else -1f }
+
+        with (binding.toolbar.menu.findItem(R.id.menu_max_brightness)){
+            isChecked = on
+            setIcon(if (on) R.drawable.ic_menu_brightness_low else R.drawable.ic_menu_brightness_high)
+        }
     }
 
     companion object {

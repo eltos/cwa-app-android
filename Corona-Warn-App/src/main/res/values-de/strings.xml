@@ -27,6 +27,8 @@
     <string name="menu_trash">"Papierkorb"</string>
     <!-- XMIT: social media -->
     <string name="menu_social_media">"Social Media"</string>
+    <!-- XMIT: maximize screen brightness -->
+    <string name="menu_max_brightness">Maximale Helligkeit</string>
 
     <!-- ####################################
                Notification
